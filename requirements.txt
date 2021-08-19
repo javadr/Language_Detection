@@ -1,0 +1,9 @@
+numpy
+pandas
+matplotlib
+sklearn
+seaborn
+torch
+torchsummary
+iso639
+
