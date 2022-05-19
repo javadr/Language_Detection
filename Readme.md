@@ -1,4 +1,4 @@
-# Language Detection 
+# Language Detection Cancel changes
 -----
 Detection of the language of a text with Multinomial Naive Bayes method and Neural Network Model 
 
@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 # The Methods
-As a feature selection, the Count Vectorizer have been used to count the bi-grams and tir-grams with minimum frequency of `5`. 
+As a feature selection, the Count Vectorizer have been used to count the bi-grams and tri-grams with minimum frequency of `5`. 
 The Naive Bayes achieve got `96%` accuracy on an unseen data set while the trained neural network approached the `97%`. 
 
 # Datasets
