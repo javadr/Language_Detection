@@ -1,4 +1,4 @@
-# Language Detection Cancel changes
+# Language Detection
 -----
 Detection of the language of a text with Multinomial Naive Bayes method and Neural Network Model 
 
