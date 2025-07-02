@@ -5,9 +5,6 @@ import time
 import math
 
 # Third-party modules
-import numpy as np
-import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Local application modules

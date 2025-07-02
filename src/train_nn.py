@@ -22,7 +22,7 @@ from torch.utils.data import DataLoader
 # Local application modules
 import utils
 from config import CFG, get_logger, Net
-from data import data, train_loader, val_loader, test_loader
+from data import data, train_loader, val_loader
 
 
 logger = get_logger(__file__)
@@ -127,11 +127,15 @@ for epoch in range(CFG.n_epochs + 1):
     val_accuracies.append(val_acc)
     val_f1s.append(val_f1)
 
+    # Save the best model
     if best_loss > val_loss:
         best_loss = val_loss
         best_model = modelNN
+
+    # Update the learning rate
     lr_scheduler.step()
 
+    # Print the results
     if epoch <= 3 or epoch % print_every == 0:
         logger.info(
             f"\r====> Epoch [{epoch:3}] Train/Validation loss: {train_loss:.9f}/{val_loss:.9f} :: Accuracy: {train_acc * 100:7.5f}/{val_acc * 100:7.5f}, F1 Scores: {train_f1:.5f}/{val_f1:.5f}"

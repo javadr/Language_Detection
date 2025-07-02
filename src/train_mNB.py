@@ -1,29 +1,24 @@
 #!/usr/bin/env python3
 
 # Standard library modules
-from dataclasses import dataclass
-from pathlib import Path
-import re
-from tkinter import Y
 
 # Third-party modules
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
-import torch
-from torch.utils.data import DataLoader, Dataset
 from sklearn.naive_bayes import MultinomialNB
 from timebudget import timebudget
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, f1_score
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 
 # Local application modules
-from config import CFG
+from config import CFG, get_logger
 from data import data
+
+
+
+logger = get_logger(__file__)
 
 X_train, X_test, y_train, y_test = data.train_test_split()
 
@@ -54,19 +49,19 @@ plt.savefig(CFG.images_path / "confusion_matrix_MultinomialNB.pdf", dpi=600)
 
 if __name__ == "__main__":
     # Accuracy
-    print("Accuracy is :", ac)
+    logger.info(f"Accuracy is : {ac}")
 
     # classification report
-    print(cr)
+    logger.info(cr)
     s = [
-    "this is test for 4th.",
-    "أي تغيير  يتلاعب  بطريقة  بشكل  بسلامة يعتبر",
-    "امروز هوا بارانی است.",
-    "Eftersom Wikipedia bygger på tidskriftsartiklar, forskningspublikationer och böcker finns risk för rundgång ",
-    "loro tre erano amiche da secoli, ma Terry ed Ellie avevano un segreto entrambe.",
-    "Ja",
-]
+        "this is test for 4th.",
+        "أي تغيير  يتلاعب  بطريقة  بشكل  بسلامة يعتبر",
+        "امروز هوا بارانی است.",
+        "Eftersom Wikipedia bygger på tidskriftsartiklar, forskningspublikationer och böcker finns risk för rundgång ",
+        "loro tre erano amiche da secoli, ma Terry ed Ellie avevano un segreto entrambe.",
+        "Ja",
+    ]
     sv = data.cv.transform(s).toarray()
     l = modelMNB.predict(sv)
     for text, lang in zip(s, l):
-        print(f"{data.le.inverse_transform([lang])[0]} <-> {text}")
+        logger.info(f"{data.le.inverse_transform([lang])[0]} <-> {text}")
