@@ -1,9 +1,9 @@
+iso639
+matplotlib
 numpy
 pandas
-matplotlib
-sklearn
 seaborn
+sklearn
+streamlit
 torch
 torchsummary
-iso639
-
