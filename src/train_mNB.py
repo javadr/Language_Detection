@@ -13,8 +13,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 
 
 # Local application modules
-from .config import CFG, get_logger
-from .data import data
+from config import CFG, get_logger
+from data import data
 
 
 

@@ -14,7 +14,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 # Local application modules
-from .config import CFG, get_logger
+from config import CFG, get_logger
 
 logger = get_logger(__file__)
 
