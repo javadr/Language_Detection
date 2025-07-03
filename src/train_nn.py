@@ -20,9 +20,9 @@ from torchsummary import summary
 from torch.utils.data import DataLoader
 
 # Local application modules
-import utils
-from config import CFG, get_logger, Net
-from data import data, train_loader, val_loader
+from .config import CFG, get_logger, Net
+from .data import data, train_loader, val_loader
+from . import utils
 
 
 logger = get_logger(__file__)

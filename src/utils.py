@@ -8,7 +8,7 @@ import math
 import matplotlib.pyplot as plt
 
 # Local application modules
-from config import CFG
+from .config import CFG
 
 
 def timeSince(since):
