@@ -36,28 +36,9 @@ def res_plot(plotdata, xlabel="epoch", ylabel="losses", legend=["Train", "Valid"
     plt.show()
 
 
-ISO639_LANGUAGE_NAMES = {
-    "ara": "Arabic",
-    "dan": "Danish",
-    "deu": "German",
-    "gre": "Greek",
-    "eng": "English",
-    "spa": "Spanish",
-    "fas": "Persian",
-    "fra": "French",
-    "hin": "Hindi",
-    "ita": "Italian",
-    "kan": "Kannada",
-    "mal": "Malayalam",
-    "dut": "Dutch",
-    "por": "Portuguese",
-    "rus": "Russian",
-    "swe": "Swedish",
-    "tam": "Tamil",
-    "tur": "Turkish",
-}
-
-
 if __name__ == "__main__":
     start = time.time() - 1000
     print(timeSince(start))
+
+
+ 

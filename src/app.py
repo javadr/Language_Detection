@@ -2,6 +2,7 @@
 
 # Standard library modules
 import time
+import requests
 import subprocess
 from typing import Sequence
 
@@ -17,8 +18,8 @@ import streamlit as st
 
 # Local application modules
 from config import CFG, Net
+from constants import ISO639_LANGUAGE_NAMES, CSS, COLGROUP
 from data import data, ldata
-from utils import ISO639_LANGUAGE_NAMES
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -98,88 +99,99 @@ def main():
         unsafe_allow_html=True,
     )
 
-    # Title and Description
-    st.title("Language Detection")
-    st.markdown("""
-    This application uses a Character Based bi/trigram for document language prediction. 
-    Enter a sentence or paragraph below to see the result.
+    tab1, tab2 = st.tabs(["App", "📄 README"])
+    with tab1:
+        # Title and Description
+        st.title("Language Detection")
+        st.markdown("""
+        This application uses a Character Based bi/trigram for document language prediction. 
+        Enter a sentence or paragraph below to see the result.
 
-    """)
+        """)
 
-    st.markdown("### Select a Row")
-    df = load_data()
-    # Add a selection column
-    df["select"] = False
-    selected_rows = st.data_editor(
-        df,
-        hide_index=True,
-        use_container_width=True,
-        num_rows="fixed",
-        column_order=["select", "Text", "Label"],  # + list(df.columns),
-        key="data_editor",
-        column_config={
-            "select": st.column_config.CheckboxColumn("Select", help="Select rows to keep"),
-        },
-    )
+        st.markdown("### Select a Row")
+        df = load_data()
+        # Add a selection column
+        df["select"] = False
+        selected_rows = st.data_editor(
+            df,
+            hide_index=True,
+            use_container_width=True,
+            num_rows="fixed",
+            column_order=["select", "Text", "Label"],  # + list(df.columns),
+            key="data_editor",
+            column_config={
+                "select": st.column_config.CheckboxColumn("Select", help="Select rows to keep"),
+            },
+        )
 
-    st.markdown("### OR Enter text to analyze")
-    user_input = st.text_area("", height=200, key="user_input")
+        st.markdown("### OR Enter text to analyze")
+        user_input = st.text_area("", height=200, key="user_input")
 
-    no_selected_rows = False
-    no_user_input = False
+        no_selected_rows = False
+        no_user_input = False
 
-    # Button to Predict
-    if st.button("Analyze"):
-        lines = []
+        # Button to Predict
+        if st.button("Analyze"):
+            lines = []
 
-        # Filter selected rows
-        selected_rows = selected_rows[selected_rows["select"] == True]
+            # Filter selected rows
+            selected_rows = selected_rows[selected_rows["select"] == True]
 
-        if not selected_rows.empty:
-            lines.extend(selected_rows["Text"].tolist())
-        else:
-            no_selected_rows = True
+            if not selected_rows.empty:
+                lines.extend(selected_rows["Text"].tolist())
+            else:
+                no_selected_rows = True
 
-        if user_input.strip():
-            with st.spinner("Analyzing..."):
-                st.subheader("Results:")
-                for line in user_input.strip().split("\n"):
-                    line = line.strip()
-                    if not line:
-                        continue
+            if user_input.strip():
+                with st.spinner("Analyzing..."):
+                    st.subheader("Results:")
+                    for line in user_input.strip().split("\n"):
+                        line = line.strip()
+                        if not line:
+                            continue
 
-                    lines.append(line)
-        else:
-            no_user_input = True
+                        lines.append(line)
+            else:
+                no_user_input = True
 
-        if no_selected_rows and no_user_input:
-            st.warning("Please enter text or select a row before clicking analyze.")
+            if no_selected_rows and no_user_input:
+                st.warning("Please enter text or select a row before clicking analyze.")
 
-        if lines:
-            df = pd.DataFrame(columns=["Text", "Predicted Label"])
-            processed_lines = pd.DataFrame.from_dict({"Text": lines})
-            processed_lines = data.preprocess_text(processed_lines["Text"])
+            if lines:
+                df = pd.DataFrame(columns=["Text", "Predicted Label"])
+                processed_lines = pd.DataFrame.from_dict({"Text": lines})
+                processed_lines = data.preprocess_text(processed_lines["Text"])
 
-            for line, pline in zip(lines, processed_lines):
-                # text preprocessing
-                x = st.session_state.cv.transform([pline]).toarray()
-                x = torch.tensor(x, dtype=torch.float).to(device)
+                for line, pline in zip(lines, processed_lines):
+                    # text preprocessing
+                    x = st.session_state.cv.transform([pline]).toarray()
+                    x = torch.tensor(x, dtype=torch.float).to(device)
 
-                # Predict
-                with torch.no_grad():
-                    label = st.session_state.model(x)
-                    label = label.argmax(dim=1).item()
-                    label = st.session_state.le.inverse_transform([label])[0]
+                    # Predict
+                    with torch.no_grad():
+                        label = st.session_state.model(x)
+                        label = label.argmax(dim=1).item()
+                        label = st.session_state.le.inverse_transform([label])[0]
 
-                # Generate Colored Text
-                colored_text = colorize_text(line, label)
-                new_row = {"Text": colored_text, "Predicted Label": label}
-                df.loc[len(df)] = new_row
+                    # Generate Colored Text
+                    colored_text = colorize_text(line, label)
+                    new_row = {"Text": colored_text, "Predicted Label": label}
+                    df.loc[len(df)] = new_row
 
-            # Display Results
-            html_table = df.to_html(escape=False, index=False)  # Don't escape HTML content
-            st.markdown(html_table, unsafe_allow_html=True)
-            lines.clear()
+                # Display Results
+                html_table = df.to_html(escape=False, index=False)  # Don't escape HTML content
+                # Insert colgroup right after <table ...>
+                html_table = html_table.replace(
+                    '<table border="1" class="dataframe">', '<table border="1" class="dataframe">' + COLGROUP
+                )
+                st.markdown(CSS + html_table, unsafe_allow_html=True)
+                lines.clear()
+    with tab2:
+        url = "https://raw.githubusercontent.com/javadr/Language_Detection/master/Readme.md"
+        readme = requests.get(url).text
+
+        st.markdown(readme, unsafe_allow_html=True)
 
 
 # Run the app
