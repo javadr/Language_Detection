@@ -1,4 +1,3 @@
-iso639
 matplotlib
 numpy
 pandas
