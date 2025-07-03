@@ -177,7 +177,7 @@ df_cm.index.name = "Actual"
 df_cm.columns.name = "Predicted"
 plt.figure(figsize=(8, 6))
 sns.set(font_scale=0.8)
-labels = pd.DataFrame(df_cm).applymap(lambda v: f"{v}" if v != 0 else "")
+labels = pd.DataFrame(df_cm).map(lambda v: f"{v}" if v != 0 else "")
 sns.heatmap(df_cm, annot=labels, fmt="s", linewidths=0.5)
 plt.tight_layout()
 plt.title("Confusion Matrix - NN")

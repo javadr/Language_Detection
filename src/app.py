@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 # Standard library modules
+import time
+import subprocess
 from typing import Sequence
 
 # Third-party modules
@@ -197,4 +199,25 @@ if __name__ == "__main__":
         st.session_state.le = checkpoint["label_encoder"]
         main()
     else:
-        st.error(f"Model file not found at {model_path}. Please check the path and try again.")
+        st.error(f"Model file not found at {model_path}.\nPlease run the training script and try again.")
+        st.code("python src/train_nn.py")
+
+        if st.button("Run Traning Program"):
+            with st.spinner("Running..."):
+                placeholder = st.empty()
+
+                process = subprocess.Popen(
+                    ["python", "src/train_nn.py"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,  # combine stderr with stdout
+                    text=True,
+                )
+
+                output_lines = []
+                for line in process.stdout:
+                    output_lines.append(line.strip())
+                    placeholder.code("\n".join(output_lines))
+
+                st.success("✅ Script finished.")
+                time.sleep(4)
+                st.rerun()

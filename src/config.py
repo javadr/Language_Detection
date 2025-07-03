@@ -2,7 +2,7 @@
 
 # Standard library modules
 import logging
-
+import sys
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -11,15 +11,20 @@ import torch
 from torch import nn
 
 
-
-logging.basicConfig(level=logging.INFO)
+# Redirect logs to stdout
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+    ],
+)
 
 
 def get_logger(name: str | Path = __file__):
     name = Path(name).name
     logger = logging.getLogger(name)
     return logger
-
 
 
 @dataclass
@@ -49,7 +54,6 @@ class CFG:
     min_df: int = 5
 
 
-
 # Neural Network Model
 class Net(torch.nn.Module):
     def __init__(self, input_size, output_size, dropout=CFG.dropout):
@@ -65,7 +69,7 @@ class Net(torch.nn.Module):
     def forward(self, x):
         return self.linear_relu_stack(x)
 
-        
+
 # To ensure that the required directories are created.
 for dir in (CFG.saved_models_path, CFG.images_path):
     dir.mkdir(exist_ok=True, parents=True)
