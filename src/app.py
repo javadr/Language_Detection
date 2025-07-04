@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard library modules
+import re
 import time
 import requests
 import subprocess
@@ -225,10 +226,14 @@ if __name__ == "__main__":
                     text=True,
                 )
 
-                output_lines = []
+                output_lines = [""]
                 for line in process.stdout:
-                    output_lines.append(line.strip())
-                    placeholder.code("\n".join(output_lines))
+                    if line.strip():
+                        if re.match(r".*\.\.\.:.*", output_lines[-1]):
+                            output_lines[-1] = line.strip()
+                        else:
+                            output_lines.append(line.strip())
+                        placeholder.code("\n".join(output_lines))
 
                 st.success("✅ Script finished.")
                 time.sleep(4)
