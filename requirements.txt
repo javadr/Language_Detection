@@ -1,8 +1,11 @@
 matplotlib
 numpy
 pandas
-seaborn
+rich 
 scikit-learn
+seaborn
 streamlit
+timebudget
 torch
 torchsummary
+tqdm
