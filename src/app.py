@@ -26,9 +26,9 @@ import streamlit as st
 # ----------------------
 from config import app_config, Net
 from constants import ISO639_LANGUAGE_NAMES, CSS, COLGROUP
-from data import data, ldata
+from data import data, benchmark_data
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = app_config.nn.device
 
 _ = data.train_test_split()  # just to make sure the CountVectorizer is fitted
 
@@ -81,15 +81,7 @@ def colorize_text(text, label):
 
 @st.cache_resource
 def load_data():
-    X = ldata.X.loc[ldata.raw_y.isin(ISO639_LANGUAGE_NAMES.keys())]
-    y = ldata.raw_y.loc[ldata.raw_y.isin(ISO639_LANGUAGE_NAMES.keys())]
-
-    rx = st.session_state.cv.transform([i for i in X]).toarray()
-    rx = torch.tensor(rx, dtype=torch.float).to(device)
-
-    ry = [st.session_state.le.transform([ISO639_LANGUAGE_NAMES[i]]) for i in y]
-
-    return pd.DataFrame({"Text": X, "Label": ry})
+    return pd.DataFrame({"Text": benchmark_data.X, "Label": benchmark_data.y})
 
 
 # Streamlit App Layout
