@@ -153,15 +153,28 @@ utils.res_plot([train_losses, val_losses], title="Train vs Valid Losses")
 utils.res_plot([accuracies, val_accuracies], ylabel="Accuracy", title="Train vs Valid Accuracies")
 
 # torch.save(best_model, CFG.saved_models_path / "bestmodel_nn.pth")
+# torch.save(
+#     {
+#         "model_state_dict": best_model.state_dict(),
+#         "model_in_out": (input_size, output_size),
+#         "vectorizer": data.cv,
+#         "label_encoder": data.le,
+#     },
+#     app_config.base.saved_models_path / "bestmodel_nn.pth",
+# )
+
+checkpoint = {
+    "model_state_dict": {k: v.detach().cpu() for k, v in best_model.state_dict().items()},
+    "model_in_out": (input_size, output_size),
+    "vectorizer": data.cv,
+    "label_encoder": data.le,
+}
+
 torch.save(
-    {
-        "model_state_dict": best_model.state_dict(),
-        "model_in_out": (input_size, output_size),
-        "vectorizer": data.cv,
-        "label_encoder": data.le,
-    },
+    checkpoint,
     app_config.base.saved_models_path / "bestmodel_nn.pth",
 )
+
 
 best_model.eval()
 modelNN = best_model

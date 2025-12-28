@@ -25,12 +25,10 @@ import streamlit as st
 # Local application modules
 # ----------------------
 from config import app_config, Net
-from constants import ISO639_LANGUAGE_NAMES, CSS, COLGROUP
+from constants import CSS, COLGROUP
 from data import data, benchmark_data
 
 device = app_config.nn.device
-
-_ = data.train_test_split()  # just to make sure the CountVectorizer is fitted
 
 # To make a reproducible output
 torch.manual_seed(app_config.base.seed)
@@ -38,11 +36,16 @@ torch.cuda.manual_seed_all(app_config.base.seed)
 
 
 # Load your model
-@st.cache_resource  # Cache the model loading for efficiency
-def load_model(model_path):
-    model = torch.load(model_path, map_location=torch.device(device))
-    model.eval()
-    return model
+def load_model_cv_le(model_path):
+    checkpoint = torch.load(model_path, map_location=torch.device(device), weights_only=False)
+    input_size, output_size = checkpoint["model_in_out"]
+    st.session_state.model = Net(input_size, output_size)
+    st.session_state.model.load_state_dict(checkpoint["model_state_dict"])
+    st.session_state.model.to(device)
+    st.session_state.model.eval()
+
+    st.session_state.cv = checkpoint["vectorizer"]
+    st.session_state.le = checkpoint["label_encoder"]
 
 
 # Function to predict code-switching
@@ -198,16 +201,8 @@ if __name__ == "__main__":
     # Ensure model path is correct
     model_path = app_config.base.saved_models_path / "bestmodel_nn.pth"
     if model_path.exists():
-        # model = torch.load(model_path, map_location=torch.device(device), weights_only=False)
         # Restore full pipeline
-        checkpoint = torch.load(model_path, map_location=torch.device(device), weights_only=False)
-        input_size, output_size = checkpoint["model_in_out"]
-        st.session_state.model = Net(input_size, output_size)
-        st.session_state.model.load_state_dict(checkpoint["model_state_dict"])
-        st.session_state.model.eval()
-
-        st.session_state.cv = checkpoint["vectorizer"]
-        st.session_state.le = checkpoint["label_encoder"]
+        load_model_cv_le(model_path)
         main()
     else:
         st.error(f"Model file not found at {model_path}.\nPlease run the training script and try again.")
