@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
+# ----------------------
 # Standard library modules
+# ----------------------
 
+# ----------------------
 # Third-party modules
+# ----------------------
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -12,10 +16,11 @@ from timebudget import timebudget
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 
 
+# ----------------------
 # Local application modules
-from config import CFG, get_logger
+# ----------------------
+from config import app_config, get_logger
 from data import data
-
 
 
 logger = get_logger(__file__)
@@ -44,7 +49,7 @@ ticks = list(map(str, np.unique(data.le.inverse_transform(y_test))))
 plt.figure(figsize=(7, 5))
 sns.heatmap(cm, annot=labels, fmt="s", xticklabels=ticks, yticklabels=ticks, linewidths=0)
 plt.tight_layout()
-plt.savefig(CFG.images_path / "confusion_matrix_MultinomialNB.pdf", dpi=600)
+plt.savefig(app_config.base.images_path / "confusion_matrix_MultinomialNB.pdf", dpi=600)
 # plt.show()
 
 if __name__ == "__main__":

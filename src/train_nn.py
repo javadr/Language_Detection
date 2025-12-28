@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+# ----------------------
 # Standard library modules
+# ----------------------
 import time
 
+# ----------------------
 # Third-party modules
+# ----------------------
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -19,10 +23,13 @@ from torch.optim.lr_scheduler import StepLR
 from torchsummary import summary
 from torch.utils.data import DataLoader
 
+# ----------------------
 # Local application modules
+# ----------------------
 import utils
-from config import CFG, get_logger, Net
+from config import app_config, get_logger, Net
 from data import data, train_loader, val_loader
+
 
 logger = get_logger(__file__)
 
@@ -35,11 +42,11 @@ output_size = data.label_size
 modelNN = Net(input_size, output_size).to(device)
 bestModel = modelNN
 
-optimizer = Adam(modelNN.parameters(), lr=CFG.lr)
+optimizer = Adam(modelNN.parameters(), lr=app_config.nn.lr)
 lr_scheduler = StepLR(
     optimizer,
-    step_size=CFG.lr_scheduler_step_size,
-    gamma=CFG.lr_scheduler_gamma,
+    step_size=app_config.nn.lr_scheduler_step_size,
+    gamma=app_config.nn.lr_scheduler_gamma,
 )
 criterion = nn.CrossEntropyLoss()
 
@@ -99,7 +106,7 @@ def total_batches(
     return loss, acc, f1
 
 
-print_every = CFG.n_epochs // 10
+print_every = app_config.nn.n_epochs // 10
 train_losses, val_losses = [], []
 accuracies, val_accuracies = [], []
 f1s, val_f1s = [], []
@@ -111,7 +118,7 @@ logger.info("Training Starts ...")
 
 best_loss = float("inf")
 
-for epoch in range(CFG.n_epochs + 1):
+for epoch in range(app_config.nn.n_epochs + 1):
     ### Training loop
 
     train_loss, train_acc, train_f1 = total_batches(train_loader, desc="Training...", train=True)
@@ -155,7 +162,7 @@ torch.save(
         "vectorizer": data.cv,
         "label_encoder": data.le,
     },
-    CFG.saved_models_path / "bestmodel_nn.pth",
+    app_config.base.saved_models_path / "bestmodel_nn.pth",
 )
 
 best_model.eval()
@@ -180,7 +187,7 @@ labels = pd.DataFrame(df_cm).map(lambda v: f"{v}" if v != 0 else "")
 sns.heatmap(df_cm, annot=labels, fmt="s", linewidths=0.5)
 plt.tight_layout()
 plt.title("Confusion Matrix - NN")
-plt.savefig(CFG.images_path / "confusion_matrix_NN.pdf", dpi=600)
+plt.savefig(app_config.base.images_path / "confusion_matrix_NN.pdf", dpi=600)
 plt.show()
 
 

@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
+# ----------------------
 # Standard library modules
+# ----------------------
 from pathlib import Path
 import re
 
+# ----------------------
 # Third-party modules
+# ----------------------
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -13,12 +19,18 @@ from sklearn.feature_extraction.text import CountVectorizer
 import torch
 from torch.utils.data import DataLoader, Dataset
 
+# ----------------------
 # Local application modules
-from config import CFG, get_logger
+# ----------------------
+from config import app_config, get_logger
+
+
+# __all__ = ["", ""]
+
 
 logger = get_logger(__file__)
 
-def set_random_seed(seed: int=CFG.seed):
+def set_random_seed(seed: int=app_config.base.seed):
     # To make a reproducible output
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -32,10 +44,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Data:
     # Create bag of words
     _cv = CountVectorizer(
-        analyzer=CFG.analyzer,
+        analyzer=app_config.cv.analyzer,
         # stop_words=CFG.stop_words,
-        ngram_range=CFG.ngram_range,
-        min_df=CFG.min_df,
+        ngram_range=app_config.cv.ngram_range,
+        min_df=app_config.cv.min_df,
     )
 
     @property
@@ -67,7 +79,7 @@ class Data:
     @staticmethod
     def readcsv(file_: Path | str, **kwargs) -> pd.DataFrame:
         df = pd.read_csv(
-            CFG.data_path / f"{file_}",
+            app_config.base.data_path / f"{file_}",
             encoding="utf8",
             **kwargs,
         )
@@ -89,8 +101,8 @@ class Data:
         X_train, X_test, y_train, y_test = train_test_split(
             self.X,
             self.y,
-            test_size=CFG.test_size,
-            random_state=CFG.seed,
+            test_size=app_config.nn.test_size,
+            random_state=app_config.base.seed,
         )
         X_train = self.cv.fit_transform(X_train)
         X_test = self.cv.transform(X_test)
@@ -157,7 +169,7 @@ def collate_fn(batch):
 
 
 kwargs = {
-    "batch_size": CFG.batch_size,
+    "batch_size": app_config.nn.batch_size,
     "collate_fn": collate_fn,
     "num_workers": 0,
 }

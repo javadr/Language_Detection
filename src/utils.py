@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
+# ----------------------
 # Standard library modules
+# ----------------------
 import time
 import math
 
+# ----------------------
 # Third-party modules
+# ----------------------
 import matplotlib.pyplot as plt
 
+# ----------------------
 # Local application modules
-from config import CFG
+# ----------------------
+from config import app_config
 
 
 def timeSince(since):
@@ -24,21 +30,22 @@ def res_plot(plotdata, xlabel="epoch", ylabel="losses", legend=["Train", "Valid"
     ax1.set_ylabel(ylabel)
     for ax in (ax1, ax2):
         n = 10 if ax == ax2 else 0
-        x = range(CFG.n_epochs - n + 1, CFG.n_epochs + 1) if ax == ax2 else range(CFG.n_epochs + 1)
+        x = (
+            range(app_config.nn.n_epochs - n + 1, app_config.nn.n_epochs + 1)
+            if ax == ax2
+            else range(app_config.nn.n_epochs + 1)
+        )
         title = f"{title} ({n} last values)" if ax == ax2 else title
         ax.set_xlabel(xlabel)
         ax.set_title(title)
         ax.plot(x, plotdata[0][-n:], "-o", label=legend[0])
         ax.plot(x, plotdata[1][-n:], "-o", label=legend[1])
-        ax.legend() 
+        ax.legend()
     plt.tight_layout()
-    plt.savefig(CFG.images_path / f"{title}.pdf", dpi=600)
+    plt.savefig(app_config.base.images_path / f"{title}.pdf", dpi=600)
     plt.show()
 
 
 if __name__ == "__main__":
     start = time.time() - 1000
     print(timeSince(start))
-
-
- 

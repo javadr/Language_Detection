@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
+# ----------------------
 # Standard library modules
+# ----------------------
+
 import re
 import time
 import requests
 import subprocess
 from typing import Sequence
 
+# ----------------------
 # Third-party modules
+# ----------------------
 import pandas as pd
 import seaborn as sns
 from matplotlib.colors import to_hex
@@ -16,9 +21,10 @@ import torch
 
 import streamlit as st
 
-
+# ----------------------
 # Local application modules
-from config import CFG, Net
+# ----------------------
+from config import app_config, Net
 from constants import ISO639_LANGUAGE_NAMES, CSS, COLGROUP
 from data import data, ldata
 
@@ -27,8 +33,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 _ = data.train_test_split()  # just to make sure the CountVectorizer is fitted
 
 # To make a reproducible output
-torch.manual_seed(CFG.seed)
-torch.cuda.manual_seed_all(CFG.seed)
+torch.manual_seed(app_config.base.seed)
+torch.cuda.manual_seed_all(app_config.base.seed)
 
 
 # Load your model
@@ -117,7 +123,7 @@ def main():
         selected_rows = st.data_editor(
             df,
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
             num_rows="fixed",
             column_order=["select", "Text", "Label"],  # + list(df.columns),
             key="data_editor",
@@ -127,7 +133,7 @@ def main():
         )
 
         st.markdown("### OR Enter text to analyze")
-        user_input = st.text_area("", height=200, key="user_input")
+        user_input = st.text_area("Enter your text here", height=200, key="user_input", label_visibility="collapsed")
 
         no_selected_rows = False
         no_user_input = False
@@ -198,7 +204,7 @@ def main():
 # Run the app
 if __name__ == "__main__":
     # Ensure model path is correct
-    model_path = CFG.saved_models_path / "bestmodel_nn.pth"
+    model_path = app_config.base.saved_models_path / "bestmodel_nn.pth"
     if model_path.exists():
         # model = torch.load(model_path, map_location=torch.device(device), weights_only=False)
         # Restore full pipeline
