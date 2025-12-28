@@ -23,18 +23,20 @@ from torch.utils.data import DataLoader, Dataset
 # Local application modules
 # ----------------------
 from config import app_config, get_logger
-
+from constants import ISO639_LANGUAGE_NAMES
 
 # __all__ = ["", ""]
 
 
 logger = get_logger(__file__)
 
-def set_random_seed(seed: int=app_config.base.seed):
+
+def set_random_seed(seed: int = app_config.base.seed):
     # To make a reproducible output
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
 
 set_random_seed()
 
@@ -50,14 +52,42 @@ class Data:
         min_df=app_config.cv.min_df,
     )
 
+    def __init__(self, df: pd.DataFrame, le: LabelEncoder = None, cv: CountVectorizer = None):
+        # Drop duplicates and NAs
+        df = df.drop_duplicates().dropna().reset_index(drop=True)
+        self.df = df
+        self.raw_X = df["Text"]
+        self.raw_y = df["Language"]
+
+        # Use the given LabelEncoder, or create a new one if none provided
+        self.le = le if le else LabelEncoder()
+        if le:
+            # Transform using existing encoder
+            self.y = self.le.transform(self.raw_y)
+        else:
+            # Fit encoder on main dataset
+            self.y = self.le.fit_transform(self.raw_y)
+
+        self.X = self.preprocess_text(self.raw_X)
+        fit = False
+        # Vectorizer
+        if cv is None:
+            cv = self.__class__._cv
+            fit = True
+        self.CountVectorizerFit(fit=fit)
+
     @property
     def cv(self):
         return self.__class__._cv
 
+    @cv.setter
+    def cv(self, value):
+        self._cv = value
+
     @property
     def vocabulary_size(self):
         return len(self.cv.vocabulary_)
-    
+
     @property
     def label_size(self):
         return len(self.le.classes_)
@@ -65,20 +95,6 @@ class Data:
     @property
     def label_names(self):
         return self.le.classes_.tolist()
-
-    def __init__(self, df: pd.DataFrame):
-        # Drop duplicate rows and NA
-        df = df.drop_duplicates()      # Remove duplicate rows
-        df = df.dropna()               # Remove rows with any NaN values
-        df.reset_index(drop=True, inplace=True)  # Reset index after cleaning
-        self.df = df
-        # separating the independent and dependant features
-        self.raw_X = self.df["Text"]
-        self.raw_y = self.df["Language"]
-        # Convert categorical variables to numerical
-        self.X = self.preprocess_text(self.raw_X)
-        self.le = LabelEncoder()
-        self.y = self.le.fit_transform(self.raw_y)
 
     @staticmethod
     def readcsv(file_: Path | str, **kwargs) -> pd.DataFrame:
@@ -101,16 +117,20 @@ class Data:
 
         return text.apply(sanitize)  # .tolist()
 
-    def train_test_split(self):
-        X_train, X_test, y_train, y_test = train_test_split(
+    def CountVectorizerFit(self, fit=True):
+        X_train, X_test, self.y_train, self.y_test = train_test_split(
             self.X,
             self.y,
             test_size=app_config.nn.test_size,
             random_state=app_config.base.seed,
+            stratify=self.y,
         )
-        X_train = self.cv.fit_transform(X_train)
-        X_test = self.cv.transform(X_test)
-        return X_train, X_test, y_train, y_test
+
+        self.X_train = self.cv.fit_transform(X_train) if fit else self.cv.transform(X_train)
+        self.X_test = self.cv.transform(X_test)
+
+    def train_test_split(self):
+        return self.X_train, self.X_test, self.y_train, self.y_test
 
     def fit_transform(self, fit=False):
         if fit:
@@ -118,19 +138,29 @@ class Data:
         else:
             return self.cv.transform(self.X)
 
+
 # Columns: Text, Language
-data = Data(Data.readcsv("language_detection.csv.gz"))
+data = Data(Data.readcsv("language_detection.csv.bz2"))
 
 # Columns: Language, Text
 # Language names are in iso639 format
-ldata = Data(
-    Data.readcsv(
-        "lanidenn_testset.csv.gz",
-        delimiter="^",
-        header=None,
-        names=["Language", "Text"],
-    ),
+# Test dataset, using same encoder and keeping only labels seen in main data
+benchmark_df = Data.readcsv(
+    "lanidenn_testset.csv.bz2",
+    delimiter="^",
+    header=None,
+    names=["Language", "Text"],
 )
+# Map ISO codes to descriptive names, default to "Unknown" for unmapped codes
+benchmark_df["Language"] = benchmark_df["Language"].map(
+    lambda iso: ISO639_LANGUAGE_NAMES.get(iso, "Unknown"),
+)
+# Filter ldata to only labels present in main dataset
+benchmark_df = benchmark_df[benchmark_df["Language"].isin(data.label_names)].reset_index(drop=True)
+
+# Create Data instance using main dataset's LabelEncoder
+# Use same LabelEncoder and CountVectorizer
+benchmark_data = Data(benchmark_df, le=data.le, cv=data.cv)
 
 
 class LanguageDetectionDataset(Dataset):
@@ -147,6 +177,7 @@ class LanguageDetectionDataset(Dataset):
             idx = idx.item()
         return self.X[idx], self.Y[idx]
 
+
 X_train, X_test, y_train, y_test = data.train_test_split()
 train_dataset = LanguageDetectionDataset(
     X_train.toarray(),
@@ -157,8 +188,10 @@ val_dataset = LanguageDetectionDataset(
     y_test,
 )
 test_dataset = LanguageDetectionDataset(
-    ldata.fit_transform(fit=False).toarray(), # toarray() is used to convert the sparse matrix to a dense matrix
-    ldata.y,
+    benchmark_data.fit_transform(
+        fit=False,
+    ).toarray(),  # toarray() is used to convert the sparse matrix to a dense matrix
+    benchmark_data.y,
 )
 
 
@@ -196,6 +229,7 @@ test_loader = DataLoader(
 
 
 if __name__ == "__main__":
+    logger.info(data.le.classes_)
     logger.info([i.shape for i in data.train_test_split()])
     logger.info(f"train_dataset elements: {len(train_dataset)}")
     logger.info(f"test_dataset elements : {len(test_dataset)}")

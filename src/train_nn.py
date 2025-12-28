@@ -28,7 +28,7 @@ from torch.utils.data import DataLoader
 # ----------------------
 import utils
 from config import app_config, get_logger, Net
-from data import data, train_loader, val_loader
+from data import data, train_loader, val_loader, test_loader
 
 
 logger = get_logger(__file__)
@@ -98,7 +98,7 @@ def total_batches(
     f1 = f1_score(all_labels, all_preds, average="weighted")
 
     if conf_matrix:
-        conf_mat = confusion_matrix(y_true=all_labels, y_pred=all_preds)
+        conf_mat = confusion_matrix(y_true=all_labels, y_pred=all_preds, labels=range(len(data.le.classes_)))
         return conf_mat, acc, f1
 
     return loss, acc, f1
@@ -167,7 +167,7 @@ best_model.eval()
 modelNN = best_model
 
 conf_matrix, accuracy, f1score = total_batches(
-    val_loader,
+    test_loader,
     desc="Testing...",
     train=False,
     conf_matrix=True,
@@ -175,7 +175,7 @@ conf_matrix, accuracy, f1score = total_batches(
 
 logger.info(f"Accuracy is {accuracy}\nf1-score is {f1score}")
 
-ticks = [str(data.le.inverse_transform([j])[0]) for j in range(data.label_size)]
+ticks = data.le.inverse_transform(range(len(data.le.classes_)))
 df_cm = pd.DataFrame(conf_matrix, columns=ticks, index=ticks)
 df_cm.index.name = "Actual"
 df_cm.columns.name = "Predicted"
