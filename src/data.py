@@ -67,13 +67,17 @@ class Data:
         return self.le.classes_.tolist()
 
     def __init__(self, df: pd.DataFrame):
+        # Drop duplicate rows and NA
+        df = df.drop_duplicates()      # Remove duplicate rows
+        df = df.dropna()               # Remove rows with any NaN values
+        df.reset_index(drop=True, inplace=True)  # Reset index after cleaning
         self.df = df
         # separating the independent and dependant features
         self.raw_X = self.df["Text"]
         self.raw_y = self.df["Language"]
         # Convert categorical variables to numerical
-        self.le = LabelEncoder()
         self.X = self.preprocess_text(self.raw_X)
+        self.le = LabelEncoder()
         self.y = self.le.fit_transform(self.raw_y)
 
     @staticmethod

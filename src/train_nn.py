@@ -32,9 +32,7 @@ from data import data, train_loader, val_loader
 
 
 logger = get_logger(__file__)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+device = app_config.nn.device
 
 input_size = data.vocabulary_size
 output_size = data.label_size

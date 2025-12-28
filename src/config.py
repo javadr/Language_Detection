@@ -71,6 +71,8 @@ class BaseConfig:
 class NNConfig:
     """Neural network training configuration."""
 
+    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+
     # Training
     n_epochs: int = 20
     batch_size: int = 512
@@ -120,33 +122,6 @@ def load_config() -> AppConfig:
         builtins.display = print
 
     return config
-
-
-# @dataclass
-# class CFG:
-#     # Random seed
-#     seed: int = 42
-#     # Paths
-#     working_dir: Path = Path(__file__).parent.parent
-#     data_path: Path = working_dir / "data"
-#     result_path: Path = working_dir / "results"
-#     saved_models_path: Path = result_path / "saved-models"
-#     images_path: Path = result_path / "images"
-#     # Training
-#     n_epochs: int = 20
-#     batch_size: int = 512
-#     lr: float = 1e-3  # learning rate
-#     wd: float = 1e-5  # weight decay
-#     dropout: float = 0.6
-#     test_size: float = 0.20
-#     # Learning Rate Scheduler
-#     lr_scheduler_step_size: int = 10
-#     lr_scheduler_gamma: float = 0.86
-#     # CountVectorizer
-#     analyzer: str = "char"
-#     # stop_words: str = "english" # just work with "word" analyzer
-#     ngram_range: tuple[int, int] = (2, 3)  # bigram and trigram
-#     min_df: int = 5
 
 
 logger = get_logger(Path(__file__).name)
